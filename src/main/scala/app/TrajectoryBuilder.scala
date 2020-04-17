@@ -44,3 +44,4 @@ class TrajectoryBuilder() {
 
   def createTimes(): Array[Long] = records.map(r => r.timestamp.getTime).toArray
 }
+
