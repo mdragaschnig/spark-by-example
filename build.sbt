@@ -7,7 +7,8 @@ val sparkVersion = "2.2.0"
 val hadoopVersion = "2.6.5"
 val sparksortedVersion = "1.2.0"
 
-resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+resolvers in Global += Resolver.mavenLocal
+//resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 //resolvers += "Spark Packages Repo" at "http://dl.bintray.com/spark-packages/maven"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
