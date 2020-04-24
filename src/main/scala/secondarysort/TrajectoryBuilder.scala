@@ -1,4 +1,4 @@
-package app
+package secondarysort
 
 import scala.collection.mutable
 

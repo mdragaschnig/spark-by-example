@@ -1,4 +1,4 @@
-package app
+package secondarysort
 
 import org.apache.spark.sql.SparkSession
 import com.tresata.spark.sorted.PairRDDFunctions._
