@@ -1,7 +1,7 @@
 package spark_thedefinitiveguide.chapter5
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{expr, col, lit, avg}
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions.{avg, col, desc, expr, lit}
 
 object Transformations {
 
@@ -92,6 +92,16 @@ object Transformations {
     val df2 = spark.read.format("csv").option("header", true).option("inferSchema", true).load("resources/data/flight-data/2011-summary.csv")
     df.union(df2)  // note the two dataframes must have the same schema (same columns in the SAME ORDER)
 
+    //
+    // Sorting
+    df.sort("count").show(20)
+    df.sort(expr("(count * -1)  + 5")).show(20) // can also sort by arbitrary expression
+
+    df.sort(expr("count desc")).show(20) // specify ordering
+    df.sort(desc("count")).show(20)
+
+    // Sort within partitions
+    df.sortWithinPartitions("count").show(20)
 
 
   }
