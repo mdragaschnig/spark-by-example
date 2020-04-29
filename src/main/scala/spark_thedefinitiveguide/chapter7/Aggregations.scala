@@ -32,7 +32,7 @@ object Aggregations {
 
     df.select(sum('Quantity)).show()  // or sumDistinct
     df.select(avg('Quantity)).show()
-    df.select(var_samp('Quantity)).show()  // or varPop for population Variance
+    df.select(var_samp('Quantity)).show()  // or var_pop for population Variance
 
     df.select(skewness('Quantity), kurtosis('Quantity)).show()
     // covariance, correlation ...
@@ -72,7 +72,7 @@ object Aggregations {
     val window = Window.partitionBy('CustomerId, 'date).orderBy('Quantity.desc).rowsBetween(Window.unboundedPreceding, Window.currentRow)
     df2.select('CustomerId, 'date, sum('Quantity).over(window), max('Quantity).over(window)).show()
 
-    // (it's possible use multiple different Window definitions in the same select)
+    // (it's possible to use multiple different Window definitions in the same select)
     val window2 = Window.partitionBy('date).orderBy('Quantity.desc).rangeBetween(-3, 0)
     df2.select('CustomerId, 'date, sum('Quantity).over(window), sum('Quantity).over(window2)).show(false)
 
