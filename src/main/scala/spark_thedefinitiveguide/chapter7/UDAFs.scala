@@ -89,7 +89,7 @@ object UDAFs {
 
     // As in the example above, the Aggregator itself is stateless
     // the AggregationBuffer is used to store the intermediate result of a Group during Aggregation
-    case class AggregationBuffer(var sum:Double,var count:Long)
+    // must be defined top-level: case class AggregationBuffer(var sum:Double,var count:Long)
 
     class MyAvg2 extends Aggregator[Row, AggregationBuffer, Double] {
       // it seems, when working with DataFrames the InputType MUST be 'Row'
@@ -119,7 +119,7 @@ object UDAFs {
 
     // the main difference to above is that the input type can here be a case class instead of the generic Row
 
-    case class Input(country:String, quantity:Int)
+    // must be defined top-level: case class Input(country:String, quantity:Int)
 
     class MyAvg3 extends Aggregator[Input, AggregationBuffer, Double] {
       override def bufferEncoder: Encoder[AggregationBuffer] = Encoders.product[AggregationBuffer]
@@ -148,5 +148,9 @@ object UDAFs {
     ).show()
 
   }
+
+  // case classes for the aggregators must be defined top-level
+  case class Input(country:String, quantity:Int)
+  case class AggregationBuffer(var sum:Double,var count:Long)
 
 }
