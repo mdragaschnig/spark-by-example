@@ -30,7 +30,7 @@ class ComplicatedObjectUDT extends UserDefinedType[ComplicatedObject] {
     val bis = new ByteArrayInputStream(datum.asInstanceOf[Array[Byte]])
     val ois = new ObjectInputStream(bis)
     val s = ois.readObject().asInstanceOf[String]
-    new ComplicatedObject(s)
+    new ComplicatedObject("restored: " + s)
   }
 
   override def userClass: Class[ComplicatedObject] = classOf[ComplicatedObject]
