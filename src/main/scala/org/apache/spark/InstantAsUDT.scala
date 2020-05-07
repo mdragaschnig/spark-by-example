@@ -64,7 +64,7 @@ object InstantAsUDT {
     val spark = SparkSession.builder.master("local[*]").appName("Experiments").getOrCreate()
     import spark.implicits._
 
-    InstantUDT.register() // need register the UDF
+    InstantUDT.register() // need register the User Defined Type
 
     implicit val recordEncoder = Encoders.product[Record] // now we can use Encoders.product
 
