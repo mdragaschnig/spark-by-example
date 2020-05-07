@@ -11,7 +11,7 @@ object InstantAsUDT {
   // assuming you have a harmless looking case class like this
   case class Record(x:Double, y:Double, time:Instant)
 
-  // If want to use Record in a Dataset[Record] you would like to define Encoders.product[Record] to gain maximum performance and convenience
+  // If we want to use Record in a Dataset[Record] you would like to define Encoders.product[Record] to gain maximum performance and convenience
   // But this will FAIL (because Instant is neither a scala Product nor a primitive type and Encoders.product thus does not know how to deal with it)
   // Also note that simply defining Encoders.kryo[Instant] will not help in this case (because the Encoder of the outer-most class defines how the entire structure is serialized)
 
