@@ -1,9 +1,13 @@
 package spark_thedefinitiveguide.chapter12_13
 
 import java.lang
+import java.time.Instant
 
+import org.apache.spark.{HashPartitioner, Partitioner, RangePartitioner, SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Encoders, Row, SparkSession}
+
+import scala.util.Random
 
 class RDD_Advanced {
   def main(args: Array[String]): Unit = {
@@ -99,7 +103,121 @@ class RDD_Advanced {
       /*mergeCombiners=*/ (list1:List[Int], list2:List[Int]) => list1 ::: list2,
       /*outputPartitions=*/ 10
     ) // res contains (key, completeCombiner) tuples
-    
+
+
+    //
+    // CO-Groups
+
+    val distinctChars = words.flatMap(word => word.toLowerCase.toSeq).distinct
+    val rng = new Random()
+    val charRDD: RDD[(Char, Double)] = distinctChars.map(c => (c, rng.nextDouble())).cache()
+    val charRDD2: RDD[(Char, Double)] = distinctChars.map(c => (c, rng.nextDouble())).cache()
+
+    //  group together records of charRDD with records of charRDD2 (group by value of first element in the pair)
+    charRDD.cogroup(charRDD2).collect()
+
+
+    //
+    // Joins
+    val keyedChars = distinctChars.map(c => (c, rng.nextDouble())).cache()
+    val numPartitions = 10
+    KVcharacters.join(keyedChars, numPartitions).collect()
+    // lots of other join functions exist:  fullOuterJoin, leftOuterJoin, rightOuterJoin, ...
+
+
+    //
+    // Zips
+
+    // combine two RDDs with the same length (and same number of partitions)
+    val numRange = spark.sparkContext.parallelize(1 to 9, 2)
+    words.zip(numRange).collect() // this only works when length and number of partitions is equal
+
+
+    //
+    // Controlling Partitions
+    //
+
+    // coalesce - collapses the data on a single worker in order to avoid shuffles during repartitioning
+    //
+    words.getNumPartitions
+    words.coalesce(1).getNumPartitions
+
+    // repartition - allows changing number of partitions up or down
+    words.repartition(10)  // performs a shuffle across all nodes
+
+
+    // repartitionAndSortWithinPartitions
+    // KVcharacters.repartitionAndSortWithinPartitions(partitioner)
+
+    //
+    // Custom Partitioning
+
+    val df = spark.read.option("header", "true").option("inferSchema", "true").csv("resources/data/retail-data-by-day/*.csv")
+    val rdd = df.repartition(10).rdd
+    val keyedRdd: RDD[(Double, Row)] = rdd.keyBy(row => row(6).asInstanceOf[Double])  // key=customerId, value=full_record
+
+    // Builtin Partitioners:
+
+    keyedRdd.partitionBy(new HashPartitioner(10)).take(10)
+    keyedRdd.partitionBy(new RangePartitioner(10,keyedRdd, ascending=true)).take(10)
+
+    // Custom Partitioner
+
+    class ExamplePartitioner extends Partitioner {
+      override def numPartitions: Int = 3
+
+      override def getPartition(key: Any): Int = {
+        val customerId = key.asInstanceOf[Double].toInt
+        if(customerId==17850) { // customer 17850 gets his own partition
+          0
+        } else { // everything else is randomly distributed between two partitions
+          new Random().nextInt(2)+1
+        }
+      }
+    }
+
+    val parts = keyedRdd.partitionBy(new ExamplePartitioner()).glom().collect()
+
+    //
+    // Serialization
+    //
+
+    class SomeClass(var value:Int) {}
+    spark.sparkContext.parallelize(1 to 10).map(n => new SomeClass(n)).collect() // this will fail because SomeClass is not Serializable
+
+    class SomeClass2(var value:Int) extends Serializable {}
+    spark.sparkContext.parallelize(1 to 10).map(n => new SomeClass2(n)).collect() // this works
+
+    case class SomeClass3(value:Int)
+    spark.sparkContext.parallelize(1 to 10).map(n => SomeClass3(n)).collect() // this also works because SomeClass3 is a case class
+
+    // Kryo
+
+    // Using Kryo Encoders with a DataSet is easy:
+
+    implicit val someClassEncoder = Encoders.kryo[SomeClass]
+    spark.sparkContext.parallelize(1 to 10).map(x=>new SomeClass(x)).toDF().as[SomeClass].show()
+
+    // but when using Kryo with RDDs, we need to register the class before creating a spark session:
+
+    val conf = new SparkConf().setMaster("local[*]").setAppName("kryo-test")
+    conf.registerKryoClasses(Array(classOf[SomeClass]))  // define that SomeClass should be serialized via kryo
+
+    val spark2 = SparkSession.builder().config(conf).getOrCreate()
+
+    import spark2.implicits._
+    spark2.sparkContext.parallelize(1 to 10).map(n => new SomeClass(n)).collect() // this works now (although SomeClass is not serializable)
+
+    // to make Kryo the default Serializer
+
+    val conf3 = new SparkConf().setMaster("local[*]").setAppName("kryo-test2")
+    conf3.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val spark3 = SparkSession.builder().config(conf3).getOrCreate()
+
+    import spark3.implicits._
+    spark3.sparkContext.parallelize(1 to 10).map(n => new SomeClass(n)).collect() // this also works now
+
 
   }
+
 }
