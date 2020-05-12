@@ -14,7 +14,7 @@ object GenericKryoUDTExample {
 
   // You can now do this by extending GenericKryoUDT like so:
   class MyInstantUDT extends GenericKryoUDT[Instant] {
-    override def userClass: Class[Instant] = classOf[Instant]
+    override def userClass = classOf[Instant]
   }
 
   def main(args: Array[String]): Unit = {
