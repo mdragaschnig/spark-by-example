@@ -23,6 +23,9 @@ object GenericKryoUDTExample {
 
     // register the MyInstantUDT
     GenericKryoUDTRegistrationHelper.register(classOf[Instant], classOf[MyInstantUDT])
+
+    //
+    // DataSet example
     implicit val recordEncoder = Encoders.product[Record] // now we can use Encoders.product
 
     val recs = Seq(
@@ -32,6 +35,15 @@ object GenericKryoUDTExample {
 
     val ds = spark.createDataset(recs)
     ds.show(true)
+
+    //
+    // Bonus: DataFrame Example (the UDT also works with DataFrames!)
+    val df = spark.sparkContext.parallelize(
+      Seq((1,2,Instant.parse("2020-05-07T14:50:00Z")),
+          (3,4,Instant.parse("2020-05-07T14:55:00Z"))
+    )).toDF("x", "y", "t")
+    df.show()
+
   }
 
 }
