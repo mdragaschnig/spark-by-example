@@ -26,11 +26,10 @@ object GenericKryoUDT {
     }
 
     override def deserialize(datum: Any): T = {
-      val bis = new ByteArrayInputStream(datum.asInstanceOf[Array[Byte]])
       val kryo = new Kryo()
       // this is necessary for classes that don't have a zero-argument constructor
       kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy))
-      kryo.readObject(new Input(bis), userClass)
+      kryo.readObject(new Input(datum.asInstanceOf[Array[Byte]]), userClass)
     }
   }
 
