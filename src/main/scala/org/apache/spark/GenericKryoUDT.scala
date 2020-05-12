@@ -13,8 +13,7 @@ import org.objenesis.strategy.StdInstantiatorStrategy
 
 object GenericKryoUDT {
 
-  // If you want to create a UDT that is serialized with Kryo you can safe some typing by using this
-  // abstract class as a base
+  // If you want to create a UDT that is serialized with Kryo you can save some typing by using this abstract class as a base:
 
   // --- This must be in package org.apache.spark
   abstract class GenericKryoUDT[T>:Null]  extends UserDefinedType[T] {
@@ -35,6 +34,7 @@ object GenericKryoUDT {
     }
   }
 
+  // Convenience Function to register UDTs from client code
   object GenericKryoUDTRegistrationHelper {
     def register(dataCls:Class[_],  udtCls:Class[_]): Unit = {
       UDTRegistration.register(dataCls.getName, udtCls.getName)
